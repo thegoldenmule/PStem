@@ -1,0 +1,9 @@
+#display {
+	position:absolute;
+	left: 50%;
+	width: 10em;
+	margin-left: -5em;
+	border: 1px solid #777777;
+	text-align: center;
+	padding:5px;
+}
