@@ -1,0 +1,7 @@
+A stemming algorithm based on Porter's Stemmer - http://tartarus.org/~martin/PorterStemmer/def.txt.
+
+In the demo, input a word, and it will output the stem of that word.
+
+Example:
+
+Connected, connecting, connection -> connect
