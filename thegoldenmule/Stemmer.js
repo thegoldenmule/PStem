@@ -113,7 +113,7 @@ thegoldenmule.Stemmer = (function() {
 						&& decomp.last != "l"
 						&& decomp.last != "s"
 						&& decomp.last != "z") {
-							word = word.slice(0, word.length - 2);
+							word = word.slice(0, word.length - 1);
 					} else if (decomp.o) {
 						decomp = decompose(word.slice(0, word.length - 4));
 						if (1 == decomp.m) {
