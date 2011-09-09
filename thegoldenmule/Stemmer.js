@@ -16,8 +16,8 @@ thegoldenmule.Stemmer = (function() {
 		
 		return len > 2
 			&& _vowels.indexOf(word[len - 3]) == -1
-			&& _vowels.indexOf(word[len - 2]) != -1
-			&& _vowels.indexOf(word[len - 1]) == -1 && word[len - 1].match(/[^wxy]/);
+			&& _vowels.concat("y").indexOf(word[len - 2]) != -1
+			&& _vowels.indexOf(word[len - 1]) == -1 && ["w", "x", "y"].indexOf(word[len - 1]) == -1;
 	}
 	
 	/**
@@ -47,7 +47,7 @@ thegoldenmule.Stemmer = (function() {
 			var letter = word[i];
 			
 			// vowel
-			if ((i > 0 && letter == "y" && _vowels.indexOf(word[i - 1]) == -1)
+			if ((i > 0 && "y" == letter && _vowels.indexOf(word[i - 1]) == -1)
 				|| _vowels.indexOf(letter) != -1) {
 				data.v = vowel = true;
 				consonant = false;
@@ -81,6 +81,8 @@ thegoldenmule.Stemmer = (function() {
 	}
 	
 	function pruneOneA(word) {
+		if (word.length < 3) return [word, word, word, word, word, word, word, word];
+		
 		if (word.match(/sses$/)) word = word.replace(/sses$/, "ss");
 		else if (word.match(/ies$/)) word = word.replace(/ies$/, "i");
 		else if (!word.match(/ss$/) && word.match(/s$/)) word = word.replace(/s$/, "");
@@ -95,7 +97,7 @@ thegoldenmule.Stemmer = (function() {
 			word = word.replace(/eed$/, "ee");
 		} else {
 			var success = false;
-			if (matchAndDecompose(word, /ed$/).v) {
+			if (matchAndDecompose(word, /ed$/).v) {//ble
 				word = word.replace(/ed$/, "");
 				success = true;
 			} else if (matchAndDecompose(word, /ing$/).v) {
@@ -115,7 +117,6 @@ thegoldenmule.Stemmer = (function() {
 						&& decomp.last != "z") {
 							word = word.slice(0, word.length - 1);
 					} else if (decomp.o) {
-						//alert("Here with " + word + " " + word.slice(0, word.length - 3));
 						decomp = decompose(word);//word.slice(0, word.length - 3));
 						if (1 == decomp.m) {
 							word += "e";
@@ -187,7 +188,7 @@ thegoldenmule.Stemmer = (function() {
 		else if (matchAndDecompose(word, /ent$/).m > 1) word = word.replace(/ent$/, "");
 		else {
 			var decomp = matchAndDecompose(word, /ion$/);
-			if ("s" == decomp.last || "t" == decomp.last) {
+			if (decomp.m > 1 && ("s" == decomp.last || "t" == decomp.last)) {
 				word = word.replace(/ion$/, "");
 			}
 			else if (matchAndDecompose(word, /ou$/).m > 1) word = word.replace(/ou$/, "");
@@ -215,7 +216,10 @@ thegoldenmule.Stemmer = (function() {
 	}
 	
 	function pruneFiveB(word) {
-		
+		var decomp = decompose(word);
+		if (decomp.m > 1 && decomp.d && "l" == decomp.last) {
+			word = word.replace(/\w$/, "");
+		}
 		
 		return word;
 	}
