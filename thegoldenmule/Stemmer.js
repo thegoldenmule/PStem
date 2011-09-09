@@ -13,11 +13,11 @@ thegoldenmule.Stemmer = (function() {
 	
 	function isCVC(word) {
 		var len = word.length;
-	
+		
 		return len > 2
 			&& _vowels.indexOf(word[len - 3]) == -1
 			&& _vowels.indexOf(word[len - 2]) != -1
-			&& _vowels.indexOf(word[len - 1]) == -1;
+			&& _vowels.indexOf(word[len - 1]) == -1 && word[len - 1].match(/[^wxy]/);
 	}
 	
 	/**
@@ -115,9 +115,10 @@ thegoldenmule.Stemmer = (function() {
 						&& decomp.last != "z") {
 							word = word.slice(0, word.length - 1);
 					} else if (decomp.o) {
-						decomp = decompose(word.slice(0, word.length - 4));
+						//alert("Here with " + word + " " + word.slice(0, word.length - 3));
+						decomp = decompose(word);//word.slice(0, word.length - 3));
 						if (1 == decomp.m) {
-							word = word.replace(/\w{3}$/, "e");
+							word += "e";
 						}
 					}
 				}
