@@ -3,14 +3,14 @@ var Demo = (function() {
 	var Stemmer = thegoldenmule.Stemmer;
 	
 	var _that = this,
-		_stemmer = new Stemmer(),
+		_stemmer = Stemmer,
 		_inputText,
-		_outputText;
+		_outputDiv;
 	
 	_that.init = function() {
 		// get text inputs
 		_inputText = document.getElementById("inputText");
-		_outputText = document.getElementById("outputText");
+		_outputDiv = document.getElementById("results");
 		
 		// listen to submit
 		var submit = document.getElementById("submitButton");
@@ -24,14 +24,20 @@ var Demo = (function() {
 	};
 	
 	function submitHandler(event) {
-		if (_inputText.value.length > 0) {
-			_outputText.value = _stemmer.stem(_inputText.value);
-		}
+		stem(_inputText.value);
 	}
 	
 	function keypressHandler(event) {
 		if (13 == event.which) {
-			submitHandler(event);
+			stem(_inputText.value);
+		}
+	}
+	
+	function stem(phrase) {
+		if (phrase.length > 0) {
+			var words = phrase.split(" ");
+			var stemmedWords = _stemmer.stem(words[0]);
+			_outputDiv.innerHTML = stemmedWords.join(" > ");
 		}
 	}
 		

@@ -9,29 +9,33 @@ if (!thegoldenmule) var thegoldenmule = {};
 
 thegoldenmule.Stemmer = (function() {
 	
-	var vowels = ["a", "e", "i", "o", "u"];
-	
-	var v,
-		d,
-		o,
-		m,
-		last;
+	var _vowels = ["a", "e", "i", "o", "u"];
 	
 	function isCVC(word) {
 		var len = word.length;
 		
 		return len > 2
-			&& vowels.indexOf(word[len - 3]) == -1
-			&& vowels.indexOf(word[len - 2]) != -1
-			&& vowels.indexOf(word[len - 1]) == -1;
+			&& _vowels.indexOf(word[len - 3]) == -1
+			&& _vowels.indexOf(word[len - 2]) != -1
+			&& _vowels.indexOf(word[len - 1]) == -1;
 	}
 	
+	/**
+	 * Decomposes a stem.
+	 * 
+	 * m - the *measure* of a word - [C]VC{m}[V]
+	 * v - the stem has a vowel.
+	 * d - the stem ends with a double consonant.
+	 * o - the stem ends with CVC.
+	 */
 	function decompose(word) {
+		var data = {};
+		
 		// lower case it
 		word = word.toLowerCase();
 		
 		// reset m
-		m = 0;
+		data.m = 0;
 		
 		// count vowels + consonants
 		var vowel = false,
@@ -43,9 +47,9 @@ thegoldenmule.Stemmer = (function() {
 			var letter = word[i];
 			
 			// vowel
-			if ((i > 0 && letter == "y" && vowels.indexOf(word[i - 1]) == -1)
-				|| vowels.indexOf(letter) != -1) {
-				v = vowel = true;
+			if ((i > 0 && letter == "y" && _vowels.indexOf(word[i - 1]) == -1)
+				|| _vowels.indexOf(letter) != -1) {
+				data.v = vowel = true;
 				consonant = false;
 			}
 			// consonant
@@ -55,135 +59,169 @@ thegoldenmule.Stemmer = (function() {
 				} else if (vowel) {
 					vowel = false;
 					consonant = true;
-					m++;
+					data.m++;
 				}
 			}
 		}
 		
 		// set other vars
-		last = word[len - 1];
-		d = len > 1 && last == word[len - 2] && vowels.indexOf(last) == -1;	// this assumes no yy endings
-		o = isCVC(word);
-	};
-	
-	function pruneOne(word) {
-		if (word.match(/sses$/i)) word = word.replace(/sses$/i, "ss");
-		else if (word.match(/ies$/i)) word = word.replace(/ies$/i, "i");
-		else if (word.match(/s$/i)) word = word.replace(/s$/i, "");
+		data.last = word[len - 1];
+		data.d = len > 1 && data.last == word[len - 2] && _vowels.indexOf(data.last) == -1;	// this assumes no yy endings
+		data.o = isCVC(word);
 		
-		return pruneTwo(word);
+		return data;
 	}
 	
-	function pruneTwo(word) {
-		if (m < 0 && word.match(/eed$/i)) word = word.replace(/eed$/i, "ee");
-		else {
-			if (v && word.match(/ed$/i)) word = word.replace(/ed$/i, "");
-			else if (v && word.match(/ing$/i)) word = word.replace(/ing$/i, "");
-			else {
-				if (word.match(/at$/i)) word = word.replace(/at$/i, "ate");
-				else if (word.match(/bl$/i)) word = word.replace(/bl$/i, "ble");
-				else if (word.match(/iz$/i)) word = word.replace(/iz$/i, "ize");
-				else if (d
-					&& !(last == "z" || last == "s" || last == "z")) {
-					word = word.replace(new RegExp(d + "$"), d[0]);
-				} else if (1 == m && o) {
-					word = word.slice(0, word.length - 4) + "e";
+	function matchAndDecompose(word, regex) {
+		if (word.match(regex)) {
+			return decompose(word.replace(regex, ""));
+		}
+		
+		return {};
+	}
+	
+	function pruneOneA(word) {
+		if (word.match(/sses$/)) word = word.replace(/sses$/, "ss");
+		else if (word.match(/ies$/)) word = word.replace(/ies$/, "i");
+		else if (!word.match(/ss$/) && word.match(/s$/)) word = word.replace(/s$/, "");
+		
+		return [word].concat(pruneOneB(word));
+	}
+	
+	function pruneOneB(word) {
+		var decomp;
+		
+		if (matchAndDecompose(word, /eed$/).m > 0) {
+			word = word.replace(/eed$/, "ee");
+		} else {
+			var success = false;
+			if (matchAndDecompose(word, /ed$/).v) {
+				word = word.replace(/ed$/, "");
+				success = true;
+			} else if (matchAndDecompose(word, /ing$/).v) {
+				word = word.replace(/ing$/, "");
+				success = true;
+			}
+			
+			if (success) {
+				if (word.match(/at$/)) word = word.replace(/at$/, "ate");
+				else if (word.match(/bl$/)) word = word.replace(/bl$/, "ble");
+				else if (word.match(/iz$/)) word = word.replace(/iz$/, "ize");
+				else {
+					decomp = decompose(word);
+					if (decomp.d
+						&& decomp.last != "l"
+						&& decomp.last != "s"
+						&& decomp.last != "z") {
+							word = word.slice(0, word.length - 2);
+					} else if (decomp.o) {
+						decomp = decompose(word.slice(0, word.length - 4));
+						if (1 == decomp.m) {
+							word = word.replace(/\w{3}$/, "e");
+						}
+					}
 				}
 			}
 		}
 		
-		if (v && word.match(/y$/i)) word = word.replace(/y$/i, "i");
+		return [word].concat(pruneOneC(word));
+	}
+	
+	function pruneOneC(word) {
+		if (matchAndDecompose(word, /y$/).v) {
+			word = word.replace(/y$/, "i");
+		}
 		
-		return pruneThree(word);
+		return [word].concat(pruneTwo(word));
+	}
+	
+	function pruneTwo(word) {
+		if (matchAndDecompose(word, /ational$/).m > 0) word = word.replace(/ational$/, "ate");
+		else if (matchAndDecompose(word, /tional$/).m > 0) word = word.replace(/tional$/, "tion");
+		else if (matchAndDecompose(word, /enci$/).m > 0) word = word.replace(/enci$/, "ence");
+		else if (matchAndDecompose(word, /anci$/).m > 0) word = word.replace(/anci$/, "ance");
+		else if (matchAndDecompose(word, /izer$/).m > 0) word = word.replace(/izer$/, "ize");
+		else if (matchAndDecompose(word, /abli$/).m > 0) word = word.replace(/abli$/, "able");
+		else if (matchAndDecompose(word, /alli$/).m > 0) word = word.replace(/alli$/, "al");
+		else if (matchAndDecompose(word, /entli$/).m > 0) word = word.replace(/entli$/, "ent");
+		else if (matchAndDecompose(word, /eli$/).m > 0) word = word.replace(/eli$/, "e");
+		else if (matchAndDecompose(word, /ousli$/).m > 0) word = word.replace(/ousli$/, "ous");
+		else if (matchAndDecompose(word, /ization/).m > 0) word = word.replace(/ization$/, "ize");
+		else if (matchAndDecompose(word, /ation$/).m > 0) word = word.replace(/ation$/, "ate");
+		else if (matchAndDecompose(word, /ator$/).m > 0) word = word.replace(/ator$/, "ate");
+		else if (matchAndDecompose(word, /alism$/).m > 0) word = word.replace(/alism$/, "al");
+		else if (matchAndDecompose(word, /iveness$/).m > 0) word = word.replace(/iveness$/, "ive");
+		else if (matchAndDecompose(word, /fulness$/).m > 0) word = word.replace(/fulness$/, "ful");
+		else if (matchAndDecompose(word, /ousness$/).m > 0) word = word.replace(/ousness$/, "ous");
+		else if (matchAndDecompose(word, /aliti$/).m > 0) word = word.replace(/aliti$/, "al");
+		else if (matchAndDecompose(word, /iviti$/).m > 0) word = word.replace(/iviti$/i, "ive");
+		else if (matchAndDecompose(word, /biliti$/).m > 0) word = word.replace(/biliti$/, "ble");
+		
+		return [word].concat(pruneThree(word));
 	}
 	
 	function pruneThree(word) {
-		if (0 == m) return pruneFour(word);
+		if (matchAndDecompose(word, /icate$/).m > 0) word = word.replace(/icate$/, "ic");
+		else if (matchAndDecompose(word, /ative$/).m > 0) word = word.replace(/ative$/, "");
+		else if (matchAndDecompose(word, /alize$/).m > 0) word = word.replace(/alize$/, "al");
+		else if (matchAndDecompose(word, /iciti$/).m > 0) word = word.replace(/iciti$/, "ic");
+		else if (matchAndDecompose(word, /ical$/).m > 0) word = word.replace(/ical$/, "ic");
+		else if (matchAndDecompose(word, /ful$/).m > 0) word = word.replace(/ful$/, "");
+		else if (matchAndDecompose(word, /ness$/).m > 0) word = word.replace(/ness$/, "");
 		
-		if (word.match(/ational$/i)) word = word.replace(/ational$/i, "ate");
-		else if (word.match(/tional$/i)) word = word.replace(/tional$/i, "tion");
-		else if (word.match(/enci$/i)) word = word.replace(/enci$/i, "ence");
-		else if (word.match(/anci$/i)) word = word.replace(/anci$/i, "ance");
-		else if (word.match(/izer$/i)) word = word.replace(/izer$/i, "ize");
-		else if (word.match(/abli$/i)) word = word.replace(/abli$/i, "able");
-		else if (word.match(/alli$/i)) word = word.replace(/alli$/i, "al");
-		else if (word.match(/entli$/i)) word = word.replace(/entli$/i, "ent");
-		else if (word.match(/eli$/i)) word = word.replace(/eli$/i, "e");
-		else if (word.match(/ousli$/i)) word = word.replace(/ousli$/i, "ous");
-		else if (word.match(/ization/i)) word = word.replace(/ization$/i, "ize");
-		else if (word.match(/ation$/i)) word = word.replace(/ation$/i, "ate");
-		else if (word.match(/ator$/i)) word = word.replace(/ator$/i, "ate");
-		else if (word.match(/alism$/i)) word = word.replace(/alism$/i, "al");
-		else if (word.match(/iveness$/i)) word = word.replace(/iveness$/i, "ive");
-		else if (word.match(/fulness$/i)) word = word.replace(/fulness$/i, "ful");
-		else if (word.match(/ousness$/i)) word = word.replace(/ousness$/i, "ous");
-		else if (word.match(/aliti$/i)) word = word.replace(/aliti$/i, "al");
-		else if (word.match(/iviti$/i)) word = word.replace(/iviti$/i, "ive");
-		else if (word.match(/biliti$/i)) word = word.replace(/biliti$/i, "ble");
-		
-		return pruneFour(word);
+		return [word].concat(pruneFour(word));
 	}
 	
 	function pruneFour(word) {
-		if (m < 1) return pruneFive(word);
+		if (matchAndDecompose(word, /al$/).m > 1) word = word.replace(/al$/, "");
+		else if (matchAndDecompose(word, /ance$/).m > 1) word = word.replace(/ance$/, "");
+		else if (matchAndDecompose(word, /ence$/).m > 1) word = word.replace(/ence$/, "");
+		else if (matchAndDecompose(word, /er$/).m > 1) word = word.replace(/er$/, "");
+		else if (matchAndDecompose(word, /ic$/).m > 1) word = word.replace(/ic$/, "");
+		else if (matchAndDecompose(word, /able$/).m > 1) word = word.replace(/able$/, "");
+		else if (matchAndDecompose(word, /ible$/).m > 1) word = word.replace(/ible$/, "");
+		else if (matchAndDecompose(word, /ant$/).m > 1) word = word.replace(/ant$/, "");
+		else if (matchAndDecompose(word, /ement$/).m > 1) word = word.replace(/ement$/, "");
+		else if (matchAndDecompose(word, /ment$/).m > 1) word = word.replace(/ment$/, "");
+		else if (matchAndDecompose(word, /ent$/).m > 1) word = word.replace(/ent$/, "");
+		else {
+			var decomp = matchAndDecompose(word, /ion$/);
+			if ("s" == decomp.last || "t" == decomp.last) {
+				word = word.replace(/ion$/, "");
+			}
+			else if (matchAndDecompose(word, /ou$/).m > 1) word = word.replace(/ou$/, "");
+			else if (matchAndDecompose(word, /ism$/).m > 1) word = word.replace(/ism$/, "");
+			else if (matchAndDecompose(word, /ate$/).m > 1) word = word.replace(/ate$/, "");
+			else if (matchAndDecompose(word, /iti$/).m > 1) word = word.replace(/iti$/, "");
+			else if (matchAndDecompose(word, /ous$/).m > 1) word = word.replace(/ous$/, "");
+			else if (matchAndDecompose(word, /ive$/).m > 1) word = word.replace(/ive$/, "");
+			else if (matchAndDecompose(word, /ize$/).m > 1) word = word.replace(/ize$/, "");
+		}
 		
-		if (word.match(/icate/i)) word = word.replace(/icate/i, "ic");
-		else if (word.match(/ative/i)) word = word.replace(/ative/i, "");
-		else if (word.match(/alize/i)) word = word.replace(/alize/i, "al");
-		else if (word.match(/iciti/i)) word = word.replace(/iciti/i, "ic");
-		else if (word.match(/ical/i)) word = word.replace(/ical/i, "ic");
-		else if (word.match(/ful/i)) word = word.replace(/ful/i, "");
-		else if (word.match(/ness/i)) word = word.replace(/ness/i, "");
-		
-		return pruneFive(word);
+		return [word].concat(pruneFiveA(word));
 	}
 	
-	function pruneFive(word) {
-		if (m < 1) return pruneSix(word);
+	function pruneFiveA(word) {
+		if (matchAndDecompose(word, /e$/).m > 1) word = word.replace(/e$/, "");
+		else {
+			var decomp = matchAndDecompose(word, /e$/);
+			if (1 == decomp.m && false == decomp.o) {
+				word = word.replace(/e$/, "");
+			}
+		}
 		
-		if (word.match(/al/i)) word = word.replace(/al/i, "");
-		else if (word.match(/ance/i)) word = word.replace(/ance/i, "");
-		else if (word.match(/ence/i)) word = word.replace(/ence/i, "");
-		else if (word.match(/er/i)) word = word.replace(/er/i, "");
-		else if (word.match(/ic/i)) word = word.replace(/ic/i, "");
-		else if (word.match(/able/i)) word = word.replace(/able/i, "");
-		else if (word.match(/ible/i)) word = word.replace(/ible/i, "");
-		else if (word.match(/ant/i)) word = word.replace(/ant/i, "");
-		else if (word.match(/ement/i)) word = word.replace(/ement/i, "");
-		else if (word.match(/ment/i)) word = word.replace(/ment/i, "");
-		else if (word.match(/ent/i)) word = word.replace(/ent/i, "");
-		else if ((last == "s" || last == "t")
-			&& word.match(/ion/i)) word = word.replace(/ion/i, "");
-		else if (word.match(/ou/i)) word = word.replace(/ou/i, "");
-		else if (word.match(/ism/i)) word = word.replace(/ism/i, "");
-		else if (word.match(/ate/i)) word = word.replace(/ate/i, "");
-		else if (word.match(/iti/i)) word = word.replace(/iti/i, "");
-		else if (word.match(/ous/i)) word = word.replace(/ous/i, "");
-		else if (word.match(/ive/i)) word = word.replace(/ive/i, "");
-		else if (word.match(/ize/i)) word = word.replace(/ize/i, "");
-		
-		return pruneSix(word);
+		return [word].concat(pruneFiveB(word));
 	}
 	
-	function pruneSix(word) {
-		if (m > 1 && word.match(/e$/i)) word = word.replace(/e$/i, "");
-		else if (1 == m && !o) word = word.replace(/e$/i, "");
-		else if (m > 1 && d && "l" == last) word = word.replace(/l$/i, "");
+	function pruneFiveB(word) {
+		
 		
 		return word;
 	}
 	
-	var Constr = function() {
-		var _that = this;
-		
-		_that.stem = function(word) {
-			decompose(word);
-			
-			return pruneOne(word);
-		};
-		
-		return _that;
+	return {
+		stem:function(word) {
+			return pruneOneA(word.toLowerCase());
+		}
 	};
-	
-	return Constr;
 })();

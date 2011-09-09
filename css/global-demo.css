@@ -7,3 +7,7 @@
 	text-align: center;
 	padding:5px;
 }
+
+p {
+	border: 1px solid #CCCCCC;
+}
