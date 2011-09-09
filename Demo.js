@@ -37,8 +37,12 @@ var Demo = (function() {
 		if (phrase.length > 0) {
 			var words = phrase.split(" ");
 			var stemmedWords = _stemmer.stem(words[0]);
+			var finalStem = stemmedWords.pop();
 			_outputDiv.innerHTML = stemmedWords.join(" > ");
+			_outputDiv.innerHTML += "<p class=stem>" + finalStem + "</p>";
 		}
+		
+		_inputText.value = "";
 	}
 		
 	return _that;
