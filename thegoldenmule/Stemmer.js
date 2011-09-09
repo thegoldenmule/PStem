@@ -13,7 +13,7 @@ thegoldenmule.Stemmer = (function() {
 	
 	function isCVC(word) {
 		var len = word.length;
-		
+	
 		return len > 2
 			&& _vowels.indexOf(word[len - 3]) == -1
 			&& _vowels.indexOf(word[len - 2]) != -1
