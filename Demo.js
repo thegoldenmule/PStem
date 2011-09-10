@@ -1,16 +1,18 @@
 var Demo = (function() {
 	
-	var Stemmer = thegoldenmule.Stemmer;
+	var Stemmer = thegoldenmule.Stemmer,
+		VocabTest = thegoldenmule.VocabTest;
 	
 	var _that = this,
-		_stemmer = Stemmer,
 		_inputText,
-		_outputDiv;
+		_outputDiv,
+		_testOutputDiv;
 	
 	_that.init = function() {
 		// get text inputs
 		_inputText = document.getElementById("inputText");
 		_outputDiv = document.getElementById("results");
+		_testOutputDiv = document.getElementById("testOutput");
 		
 		// listen to submit
 		var submit = document.getElementById("submitButton");
@@ -21,6 +23,11 @@ var Demo = (function() {
 			submit.attachEvent("onclick", submitHandler);
 			document.addEventListener("onkeypress", keypressHandler);
 		}
+	};
+	
+	_that.runTest = function() {
+		var testResults = VocabTest.run();
+		_testOutputDiv.innerHTML = "Passed : " + testResults.pass + " / " + testResults.total + " words.";
 	};
 	
 	function submitHandler(event) {
@@ -36,7 +43,7 @@ var Demo = (function() {
 	function stem(phrase) {
 		if (phrase.length > 0) {
 			var words = phrase.split(" ");
-			var stemmedWords = _stemmer.stem(words[0]);
+			var stemmedWords = Stemmer.stem(words[0]);
 			var finalStem = stemmedWords.pop();
 			_outputDiv.innerHTML = stemmedWords.join(" > ");
 			_outputDiv.innerHTML += "<p class=stem>" + finalStem + "</p>";

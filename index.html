@@ -6,6 +6,8 @@
   <link href="css/global-demo.css" rel="stylesheet" type="text/css" />
   
   <script type="text/javascript" src="thegoldenmule/Stemmer.js"></script>
+  <script type="text/javascript" src="test/VocabTest.js"></script>
+  <script type="text/javascript" src="test/dictionary.js"></script>
   <script type="text/javascript" src="Demo.js"></script>
 </head>
 <body onload="Demo.init();">
@@ -14,7 +16,8 @@
 		<input type=text id=inputText />
 		<div id=results></div>
 		<p>Try all the forms of a single word, like "rest", "resting", and "rested" or "restorative" and "restored".</p>
-		<p><a href="test/index.html">test against dictionary</a></p>
+		<p><a onclick="Demo.runTest()" href="#">test against dictionary</a></p>
+		<div id=testOutput></div>
 	</div>
 </body>
 </html>
