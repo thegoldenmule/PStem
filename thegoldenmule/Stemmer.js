@@ -115,7 +115,7 @@ thegoldenmule.Stemmer = (function() {
 						&& decomp.last != "z") {
 							word = word.slice(0, word.length - 1);
 					} else if (decomp.o) {
-						decomp = decompose(word);//word.slice(0, word.length - 3));
+						decomp = decompose(word);
 						if (1 == decomp.m) {
 							word += "e";
 						}

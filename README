@@ -5,3 +5,5 @@ In the demo, input a word, and it will output the stem of that word.
 Example:
 
 Connected, connecting, connection -> connect
+
+The Stemmer.js object will output an array of strings of length 8. Each of the strings in the array corresponds to a step in the algorithm's definition. The last string is the stemmed word.
