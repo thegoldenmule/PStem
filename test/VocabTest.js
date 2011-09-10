@@ -12,19 +12,20 @@ thegoldenmule.VocabTest = (function() {
 		_outputDiv.innerHTML = "";
 		
 		var total = 0;
-		var failed = 0;
+		var passed = 0;
 		var dictionary = thegoldenmule.VocabTest.dictionary;
 		for (var word in dictionary) {
-			++total;
 			var stemmed = String(_stemmer.stem(word)).split(",").pop();
 			if (stemmed != dictionary[word]) {
 				_outputDiv.innerHTML += word + " > " + stemmed + " : " + dictionary[word] + "<br>\n";
-				++failed;
+			} else {
+				++passed;
 			}
+			
+			++total;
 		}
 		
-		_outputDiv.innerHTML += "<br>Failed : " + failed + " / " + total
-			+ "<br>Passed : " + Math.floor(((total - failed) / total) * 100) + "%<br>";
+		_outputDiv.innerHTML += "<br>Passed : " + passed + " / " + total + " words<br>";
 	};
 	
 	return _that;

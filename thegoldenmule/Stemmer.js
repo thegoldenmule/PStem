@@ -89,8 +89,10 @@ thegoldenmule.Stemmer = (function() {
 	function pruneOneB(word) {
 		var decomp;
 		
-		if (matchAndDecompose(word, /eed$/).m > 0) {
-			word = word.replace(/eed$/, "ee");
+		if (word.match(/eed$/)) {
+			if (matchAndDecompose(word, /eed$/).m > 0) {
+				word = word.replace(/eed$/, "ee");
+			}	
 		} else {
 			var success = false;
 			if (matchAndDecompose(word, /ed$/).v) {
@@ -180,9 +182,15 @@ thegoldenmule.Stemmer = (function() {
 		else if (matchAndDecompose(word, /able$/).m > 1) word = word.replace(/able$/, "");
 		else if (matchAndDecompose(word, /ible$/).m > 1) word = word.replace(/ible$/, "");
 		else if (matchAndDecompose(word, /ant$/).m > 1) word = word.replace(/ant$/, "");
-		else if (matchAndDecompose(word, /ement$/).m > 1) word = word.replace(/ement$/, "");
-		else if (matchAndDecompose(word, /ment$/).m > 1) word = word.replace(/ment$/, "");
-		else if (matchAndDecompose(word, /ent$/).m > 1) word = word.replace(/ent$/, "");
+		else if (word.match(/ement$/)) {
+			if(matchAndDecompose(word, /ement$/).m > 1) word = word.replace(/ement$/, "");
+		}
+		else if (word.match(/ment$/)) {
+			if (matchAndDecompose(word, /ment$/).m > 1) word = word.replace(/ment$/, "");
+		}
+		else if (word.match(/ent$/)) {
+			if (matchAndDecompose(word, /ent$/).m > 1) word = word.replace(/ent$/, "");
+		}
 		else {
 			var decomp = matchAndDecompose(word, /ion$/);
 			if (decomp.m > 1 && ("s" == decomp.last || "t" == decomp.last)) {
