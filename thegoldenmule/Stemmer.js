@@ -12,12 +12,8 @@ thegoldenmule.Stemmer = (function() {
 	var _vowels = ["a", "e", "i", "o", "u"];
 	
 	function isCVC(word) {
-		var len = word.length;
-		
-		return len > 2
-			&& _vowels.indexOf(word[len - 3]) == -1
-			&& _vowels.concat("y").indexOf(word[len - 2]) != -1
-			&& _vowels.indexOf(word[len - 1]) == -1 && ["w", "x", "y"].indexOf(word[len - 1]) == -1;
+		return null != word.match(/[^aeiou][aeiouy][^aeiouwxy]$/)
+			|| null != word.match(/[^aeiou][^aeiouy][aeiouy][^aeiouwxy]$/)
 	}
 	
 	/**
@@ -97,7 +93,7 @@ thegoldenmule.Stemmer = (function() {
 			word = word.replace(/eed$/, "ee");
 		} else {
 			var success = false;
-			if (matchAndDecompose(word, /ed$/).v) {//ble
+			if (matchAndDecompose(word, /ed$/).v) {
 				word = word.replace(/ed$/, "");
 				success = true;
 			} else if (matchAndDecompose(word, /ing$/).v) {
@@ -143,7 +139,7 @@ thegoldenmule.Stemmer = (function() {
 		else if (matchAndDecompose(word, /enci$/).m > 0) word = word.replace(/enci$/, "ence");
 		else if (matchAndDecompose(word, /anci$/).m > 0) word = word.replace(/anci$/, "ance");
 		else if (matchAndDecompose(word, /izer$/).m > 0) word = word.replace(/izer$/, "ize");
-		else if (matchAndDecompose(word, /abli$/).m > 0) word = word.replace(/abli$/, "able");
+		else if (matchAndDecompose(word, /bli$/).m > 0) word = word.replace(/bli$/, "ble");
 		else if (matchAndDecompose(word, /alli$/).m > 0) word = word.replace(/alli$/, "al");
 		else if (matchAndDecompose(word, /entli$/).m > 0) word = word.replace(/entli$/, "ent");
 		else if (matchAndDecompose(word, /eli$/).m > 0) word = word.replace(/eli$/, "e");
@@ -158,6 +154,7 @@ thegoldenmule.Stemmer = (function() {
 		else if (matchAndDecompose(word, /aliti$/).m > 0) word = word.replace(/aliti$/, "al");
 		else if (matchAndDecompose(word, /iviti$/).m > 0) word = word.replace(/iviti$/i, "ive");
 		else if (matchAndDecompose(word, /biliti$/).m > 0) word = word.replace(/biliti$/, "ble");
+		else if (matchAndDecompose(word, /logi$/).m > 0) word = word.replace(/logi$/, "log");
 		
 		return [word].concat(pruneThree(word));
 	}
