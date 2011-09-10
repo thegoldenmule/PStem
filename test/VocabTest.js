@@ -24,7 +24,7 @@ thegoldenmule.VocabTest = (function() {
 		}
 		
 		_outputDiv.innerHTML += "<br>Failed : " + failed + " / " + total
-			+ "<br>Passed : " + Math.round(((total - failed) / total) * 100) + "%<br>";
+			+ "<br>Passed : " + Math.floor(((total - failed) / total) * 100) + "%<br>";
 	};
 	
 	return _that;
